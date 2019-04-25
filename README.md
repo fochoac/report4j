@@ -1,6 +1,6 @@
 # REPORT4J
 
-Componente utilitario para generar reportes de excel, word y pdf
+Utility component to generate excel, word and pdf documents.
 
 # Excel Report
 
