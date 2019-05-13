@@ -39,89 +39,93 @@ import ec.report4j.comun.report.util.Utilitary;
  */
 public final class ExcelReport extends Report {
 
-    private Context context;
+	private Context context;
 
-    public ExcelReport assignTemplate(byte[] plantilla, Map<String, Object> parametros) {
-        this.inputStream = new ByteArrayInputStream(plantilla);
-        context = new Context(parametros);
-        return this;
-    }
+	public ExcelReport assignTemplate(byte[] plantilla, Map<String, Object> parametros) {
+		this.inputStream = new ByteArrayInputStream(plantilla);
+		if (parametros == null) {
+			context = new Context();
+			return this;
+		}
+		context = new Context(parametros);
+		return this;
+	}
 
-    public ExcelReport buildReport() throws ReportException {
-        outputStream = new ByteArrayOutputStream();
-        this.outputStream = new ByteArrayOutputStream();
-        try {
-            JxlsHelper.getInstance().processTemplate(inputStream, outputStream, context);
-        } catch (Exception e) {
-            throw new ReportException("Error al contruir el reporte", e);
-        }
+	public ExcelReport buildReport() throws ReportException {
+		outputStream = new ByteArrayOutputStream();
+		this.outputStream = new ByteArrayOutputStream();
+		try {
+			JxlsHelper.getInstance().processTemplate(inputStream, outputStream, context);
+		} catch (Exception e) {
+			throw new ReportException("Error al contruir el reporte", e);
+		}
 
-        return this;
-    }
+		return this;
+	}
 
-    public byte[] exportBytes() {
-        return outputStream.toByteArray();
-    }
+	public byte[] exportBytes() {
+		return outputStream.toByteArray();
+	}
 
-    public OutputStream exportOS() {
-        return outputStream;
-    }
+	public OutputStream exportOS() {
+		return outputStream;
+	}
 
-    @Override
-    public byte[] exportPdf() throws ReportException {
-        ByteArrayInputStream is = new ByteArrayInputStream(exportHtml());
-        ByteArrayOutputStream os = null;
+	@Override
+	public byte[] exportPdf() throws ReportException {
+		ByteArrayInputStream is = new ByteArrayInputStream(exportHtml());
+		ByteArrayOutputStream os = null;
 
-        try {
-            os = convertHtml2Pdf(is);
-        } catch (Exception e) {
-            throw new ReportException("Error al exportar el pdf", e);
-        }
-        return os.toByteArray();
-    }
+		try {
+			os = convertHtml2Pdf(is);
+		} catch (Exception e) {
+			throw new ReportException("Error al exportar el pdf", e);
+		}
+		return os.toByteArray();
+	}
 
-    @Override
-    public byte[] exportHtml() throws ReportException {
-        try {
-            byte[] array = exportBytes();
-            ByteArrayInputStream is = new ByteArrayInputStream(array);
-            return new ExcelToHtml(is).getHTML().getBytes();
-        } catch (Exception e) {
+	@Override
+	public byte[] exportHtml() throws ReportException {
+		try {
+			byte[] array = exportBytes();
+			ByteArrayInputStream is = new ByteArrayInputStream(array);
+			return new ExcelToHtml(is).getHTML().getBytes();
+		} catch (Exception e) {
 
-            throw new ReportException("Error al exportar a html", e);
-        }
+			throw new ReportException("Error al exportar a html", e);
+		}
 
-    }
+	}
 
-    @Override
-    public String exportBase64() {
-        return org.apache.commons.codec.binary.Base64.encodeBase64String(exportBytes());
-    }
+	@Override
+	public String exportBase64() {
+		return org.apache.commons.codec.binary.Base64.encodeBase64String(exportBytes());
+	}
 
-    @Override
-    public Report assignTemplate(InputStream plantilla, Map<String, Object> parametros) throws ReportException {
-    	assignTemplate(Utilitary.convertir(plantilla), parametros);
-        return this;
-    }
+	@Override
+	public Report assignTemplate(InputStream plantilla, Map<String, Object> parametros) throws ReportException {
+		assignTemplate(Utilitary.convert(plantilla), parametros);
+		return this;
+	}
 
-    @Override
-    public Report assignTemplate(File plantilla, Map<String, Object> parametros) throws ReportException {
-    	assignTemplate(Utilitary.convertir(plantilla), parametros);
-        return this;
-    }
+	@Override
+	public Report assignTemplate(File plantilla, Map<String, Object> parametros) throws ReportException {
+		assignTemplate(Utilitary.convert(plantilla), parametros);
+		return this;
+	}
 
-    private ByteArrayOutputStream convertHtml2Pdf(ByteArrayInputStream inputStream) throws ReportException {
-        try {
-            Document document = new Document();
-            ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
-            PdfWriter writer = PdfWriter.getInstance(document, arrayOutputStream);
-            document.open();
-            XMLWorkerHelper.getInstance().parseXHtml(writer, document, inputStream);
-            document.close();
-            return arrayOutputStream;
-        } catch (Exception e) {
-            throw new ReportException("Error al convertir el html a pdf", e);
-        }
-    }
+	private ByteArrayOutputStream convertHtml2Pdf(ByteArrayInputStream inputStream) throws ReportException {
+		try {
+			Document document = new Document();
+			ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
+			PdfWriter writer = PdfWriter.getInstance(document, arrayOutputStream);
+			document.open();
+			XMLWorkerHelper.getInstance().parseXHtml(writer, document, inputStream);
+			document.close();
+			return arrayOutputStream;
+		} catch (Exception e) {
+			throw new ReportException("Error al convertir el html a pdf", e);
+		}
+	}
 
 }

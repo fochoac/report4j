@@ -23,35 +23,29 @@ import ec.report4j.comun.report.excepcion.ReportException;
  *          La clase {@link Utilitary} sirve para gestionar converisiones.
  */
 public class Utilitary {
-    private static final Logger LOG = Logger.getLogger(Utilitary.class.getName());
-    private static final String ERROR_PARSEO = "Error de conversión";
+	private static final Logger LOG = Logger.getLogger(Utilitary.class.getName());
+	private static final String ERROR_PARSEO = "Error de conversión";
 
-    private Utilitary() {
-        super();
-    }
+	private Utilitary() {
+		super();
+	}
 
-    public static final byte[] convertir(InputStream inputStream) throws ReportException {
-        try (InputStream stream = inputStream) {
-            return IOUtils.toByteArray(stream);
-        } catch (Exception e) {
+	public static final byte[] convert(InputStream inputStream) throws ReportException {
+		try (InputStream stream = inputStream) {
+			return IOUtils.toByteArray(stream);
+		} catch (Exception e) {
+			LOG.severe("Error to parse inputstream");
+			throw new ReportException(ERROR_PARSEO, e);
+		}
+	}
 
-            throw new ReportException(ERROR_PARSEO, e);
-        } finally {
-            try {
-                inputStream.close();
-            } catch (IOException e) {
-                LOG.log(Level.SEVERE, ERROR_PARSEO, e);
+	public static final byte[] convert(File file) throws ReportException {
+		try {
+			return Files.readAllBytes(file.toPath());
+		} catch (IOException e) {
+			LOG.severe("Error to parse File");
+			throw new ReportException(ERROR_PARSEO, e);
+		}
 
-            }
-        }
-    }
-
-    public static final byte[] convertir(File file) throws ReportException {
-        try {
-            return Files.readAllBytes(file.toPath());
-        } catch (IOException e) {
-            throw new ReportException(ERROR_PARSEO, e);
-        }
-
-    }
+	}
 }
