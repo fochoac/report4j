@@ -5,6 +5,7 @@ import static java.util.Objects.nonNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.jxls.common.Context;
@@ -59,33 +60,38 @@ public final class ExcelReport extends Report {
 		try {
 			JxlsHelper.getInstance().processTemplate(getConfiguration().getInputReportFile().getTemplate(),
 					outputStream, context);
-			switch (getConfiguration().getOutputReportFile().getOutputReportTypeEnum()) {
-			case DOC:
-				throw new ReportException("Convert Excel to Word doesn't support");
-
-			case XLS:
-				getConfiguration().getOutputReportFile().setOutputFile(outputStream);
-				return getConfiguration().getOutputReportFile();
-			case HTML:
-				byte[] htmlArray = exportHtml();
-				ByteArrayOutputStream os = new ByteArrayOutputStream();
-				os.write(htmlArray);
-				getConfiguration().getOutputReportFile().setOutputFile(os);
-				return getConfiguration().getOutputReportFile();
-
-			default:
-				byte[] pdfArray = exportPdf();
-				ByteArrayOutputStream osPdf = new ByteArrayOutputStream();
-				osPdf.write(pdfArray);
-				getConfiguration().getOutputReportFile().setOutputFile(osPdf);
-				return getConfiguration().getOutputReportFile();
-
-			}
+			return exportReport();
 
 		} catch (Exception e) {
 			throw new ReportException("Error to build the report", e);
 		}
 
+	}
+
+	private OutputReportFile exportReport() throws ReportException, IOException {
+		switch (getConfiguration().getOutputReportFile().getOutputReportTypeEnum()) {
+		case DOC:
+			throw new ReportException("Convert Excel to Word doesn't support");
+
+		case XLS:
+			getConfiguration().getOutputReportFile().setOutputFile(outputStream);
+			return getConfiguration().getOutputReportFile();
+		case HTML:
+			byte[] htmlArray = exportHtml();
+			return export(htmlArray);
+
+		default:
+			byte[] pdfArray = exportPdf();
+			return export(pdfArray);
+
+		}
+	}
+
+	private OutputReportFile export(byte[] htmlArray) throws IOException {
+		ByteArrayOutputStream os = new ByteArrayOutputStream();
+		os.write(htmlArray);
+		getConfiguration().getOutputReportFile().setOutputFile(os);
+		return getConfiguration().getOutputReportFile();
 	}
 
 	private byte[] exportPdf() throws ReportException {

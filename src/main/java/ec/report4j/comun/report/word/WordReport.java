@@ -6,6 +6,7 @@ import static java.util.Objects.nonNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,35 +65,40 @@ public class WordReport extends Report {
 			}
 			this.outputStream = new ByteArrayOutputStream();
 			wordMLPackage.save(outputStream);
-			switch (getConfiguration().getOutputReportFile().getOutputReportTypeEnum()) {
-			case DOC:
-				getConfiguration().getOutputReportFile().setOutputFile(outputStream);
-				return getConfiguration().getOutputReportFile();
-
-			case XLS:
-				throw new ReportException("Convert Word to Excel doesn't support");
-
-			case HTML:
-				byte[] htmlArray = exportHtml();
-				ByteArrayOutputStream os = new ByteArrayOutputStream();
-				os.write(htmlArray);
-				getConfiguration().getOutputReportFile().setOutputFile(os);
-				return getConfiguration().getOutputReportFile();
-
-			default:
-				byte[] pdfArray = exportPdf();
-				ByteArrayOutputStream osPdf = new ByteArrayOutputStream();
-				osPdf.write(pdfArray);
-				getConfiguration().getOutputReportFile().setOutputFile(osPdf);
-				return getConfiguration().getOutputReportFile();
-
-			}
+			return exportReport();
 
 		} catch (Exception e) {
 			throw new ReportException("Error al contruir el reporte", e);
 
 		}
 
+	}
+
+	private OutputReportFile exportReport() throws ReportException, IOException {
+		switch (getConfiguration().getOutputReportFile().getOutputReportTypeEnum()) {
+		case DOC:
+			getConfiguration().getOutputReportFile().setOutputFile(outputStream);
+			return getConfiguration().getOutputReportFile();
+
+		case XLS:
+			throw new ReportException("Convert Word to Excel doesn't support");
+
+		case HTML:
+			byte[] htmlArray = exportHtml();
+			return export(htmlArray);
+
+		default:
+			byte[] pdfArray = exportPdf();
+			return export(pdfArray);
+
+		}
+	}
+
+	private OutputReportFile export(byte[] htmlArray) throws IOException {
+		ByteArrayOutputStream os = new ByteArrayOutputStream();
+		os.write(htmlArray);
+		getConfiguration().getOutputReportFile().setOutputFile(os);
+		return getConfiguration().getOutputReportFile();
 	}
 
 	private void replaceFields() throws Exception {

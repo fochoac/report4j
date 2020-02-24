@@ -2,7 +2,7 @@ package ec.report4j.comun.report;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -30,9 +30,13 @@ public class OutputReportFile {
 		this.outputReportTypeEnum = outputType;
 	}
 
-	public void saveFile() throws IOException {
+	public void saveFile() throws ReportException {
 		File file = new File(path.toFile(), filename + outputReportTypeEnum.getExtension());
-		Files.newOutputStream(file.toPath()).write(outputFile.toByteArray());
+		try (OutputStream os = Files.newOutputStream(file.toPath())) {
+			os.write(outputFile.toByteArray());
+		} catch (Exception e) {
+			throw new ReportException("", e);
+		}
 	}
 
 	public String getFileBase64() {
