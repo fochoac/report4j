@@ -47,3 +47,7 @@ InputReportFile inputReportFile = new InputReportFile(PATH_TEMPLATE,
 # You want to collaborate with the project
 
 Feel free to generate pull requests that help improve the functionality of the project. Any post change is welcome.
+
+# SONARQUBE
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=fochoac_report4j&metric=alert_status)](https://sonarcloud.io/dashboard?id=fochoac_report4j)
