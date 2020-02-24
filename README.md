@@ -8,30 +8,17 @@ Utility component to generate excel, word and pdf documents.
 * Fill the variables according to the following methods:
 
 ```java
-    public abstract Report assignTemplate(InputStream plantilla, Map<String, Object> parametros) throws IOException;
-
-    public abstract Report assignTemplate(File plantilla, Map<String, Object> parametros) throws IOException;
-
-    public abstract Report assignTemplate(byte[] plantilla, Map<String, Object> parametros);
-
-    public abstract Report buildReport() throws Throwable;
-
-    public abstract byte[] exportBytes();
-
-    public abstract OutputStream exportOS();
-
-    public abstract String exportBase64();
-
-    public abstract byte[] exportPdf() throws IOException;
-
-    public abstract byte[] exportHtml() throws IOException;
+ InputReportFile inputReportFile = new InputReportFile(PATH_TEMPLATE,
+     MAP < String, Object > parameters);
+ OutputReportFile outputReportFile = new OutputReportFile(TEMPORAL_FOLDER, "testPdf", OutputReportTypeEnum.PDF);
+ ReportConfiguration configuration = new ReportConfiguration(inputReportFile, outputReportFile);
+ Report excelReport = new ExcelReport(configuration);
+ OutputReportFile report = excelReport.buildReport();
+ report.saveFile();
+ report.getFileBase64();
 ```
 
-* Instantiate the class:
 
-```java
- byte[] result = Reporte.getExcelInstance().assignTemplate(TEMPLATE,Map<String, Object> parametros).buildReport().exportBytes();
-```
 
 # Word Report
 
@@ -39,38 +26,23 @@ Utility component to generate excel, word and pdf documents.
 * Fill the variables according to the following methods:
 
 ```java
-public abstract Report assignTemplate(InputStream plantilla, Map<String, Object> parametros) throws IOException;
-
-public abstract Report assignTemplate(File plantilla, Map<String, Object> parametros) throws IOException;
-
-public abstract Report assignTemplate(byte[] plantilla, Map<String, Object> parametros);
-
-public abstract Report buildReport() throws Throwable;
-
-public abstract byte[] exportBytes();
-
-public abstract OutputStream exportOS();
-
-public abstract String exportBase64();
-
-public abstract byte[] exportPdf() throws IOException;
-
-public abstract byte[] exportHtml() throws IOException;
+InputReportFile inputReportFile = new InputReportFile(PATH_TEMPLATE,
+     MAP < String, Object > parameters);
+ OutputReportFile outputReportFile = new OutputReportFile(TEMPORAL_FOLDER, "testPdf", OutputReportTypeEnum.PDF);
+ ReportConfiguration configuration = new ReportConfiguration(inputReportFile, outputReportFile);
+ Report report = new WordReport(configuration);
+ OutputReportFile outReportFile = report.buildReport();
+ outReportFile.saveFile();
+ outReportFile.getFileBase64();
 
 ```
-* Instantiate the class:
 
-```java
- byte[] resultado = Reporte.getWordInstance().assignTemplate(PLANTILLA,Map<String, Object> parametros).buildReport().exportBytes();
-```
 
-If the word report presents tables, instantiate the class as follows:
+## Export excel or word document to:
 
-```java
-WordReport report = (WordReport) Reporte.getWordInstance();
-byte[] pdf = report.assignTemplate(TEMPLATE, Map<String, Object> parametros, List<TablaWordUtil> tablas).buildReport().exportxxx();
-        
-```
+- PDF
+- HTML
+- DOC or XLS only supports replace of variables into the document.
 
 # You want to collaborate with the project
 
