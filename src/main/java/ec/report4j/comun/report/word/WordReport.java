@@ -1,22 +1,24 @@
 
 package ec.report4j.comun.report.word;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.docx4j.model.datastorage.migration.VariablePrepare;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
 
+import ec.report4j.comun.report.OutputReportFile;
 import ec.report4j.comun.report.Report;
+import ec.report4j.comun.report.ReportConfiguration;
 import ec.report4j.comun.report.excepcion.ReportException;
-import ec.report4j.comun.report.util.Utilitary;
 import fr.opensagres.xdocreport.converter.ConverterRegistry;
 import fr.opensagres.xdocreport.converter.ConverterTypeTo;
 import fr.opensagres.xdocreport.converter.IConverter;
@@ -37,108 +39,90 @@ import fr.opensagres.xdocreport.core.document.DocumentKind;
  */
 public class WordReport extends Report {
 
-	private HashMap<String, String> parametros;
-	private List<TableWord> tablas;
+	private WordprocessingMLPackage wordMLPackage;
+	private List<TableWord> tablesToReplace;
+	private ByteArrayOutputStream outputStream;
 
-	@Override
-	public Report assignTemplate(InputStream plantilla, Map<String, Object> parametros) throws ReportException {
-		assignTemplate(Utilitary.convert(plantilla), parametros);
-		return this;
+	public WordReport(ReportConfiguration configuration) {
+		super(configuration);
+
+	}
+
+	public WordReport(ReportConfiguration configuration, List<TableWord> tablesToReplace) {
+		this(configuration);
+
+		this.tablesToReplace = tablesToReplace;
 	}
 
 	@Override
-	public Report assignTemplate(File plantilla, Map<String, Object> parametros) throws ReportException {
-		assignTemplate(Utilitary.convert(plantilla), parametros);
-		return this;
-	}
-
-	@Override
-	public WordReport assignTemplate(byte[] plantilla, Map<String, Object> parametros) {
-		this.inputStream = new ByteArrayInputStream(plantilla);
-		parsearParametros(parametros);
-		return this;
-	}
-
-	public WordReport assignTemplate(byte[] plantilla, Map<String, Object> parametros, List<TableWord> tablas) {
-		this.inputStream = new ByteArrayInputStream(plantilla);
-		this.tablas = tablas;
-		parsearParametros(parametros);
-		return this;
-	}
-
-	public WordReport assignTemplate(InputStream plantilla, Map<String, Object> parametros, List<TableWord> tablas)
-			throws ReportException {
-		assignTemplate(plantilla, parametros);
-		this.tablas = tablas;
-		return this;
-	}
-
-	public WordReport assignTemplate(File plantilla, Map<String, Object> parametros, List<TableWord> tablas)
-			throws ReportException {
-		assignTemplate(plantilla, parametros);
-		this.tablas = tablas;
-		return this;
-	}
-
-	@Override
-	public WordReport buildReport() throws ReportException {
+	public OutputReportFile buildReport() throws ReportException {
 
 		try {
-			wordMLPackage = WordprocessingMLPackage.load(inputStream);
-			if (!this.parametros.isEmpty()) {
+			wordMLPackage = WordprocessingMLPackage.load(getConfiguration().getInputReportFile().getTemplate());
+			if (!getWordParametersMap().isEmpty()) {
 				replaceFields();
 			}
 			this.outputStream = new ByteArrayOutputStream();
 			wordMLPackage.save(outputStream);
+			switch (getConfiguration().getOutputReportFile().getOutputReportTypeEnum()) {
+			case DOC:
+				getConfiguration().getOutputReportFile().setOutputFile(outputStream);
+				return getConfiguration().getOutputReportFile();
+
+			case XLS:
+				throw new ReportException("Convert Word to Excel doesn't support");
+
+			case HTML:
+				byte[] htmlArray = exportHtml();
+				ByteArrayOutputStream os = new ByteArrayOutputStream();
+				os.write(htmlArray);
+				getConfiguration().getOutputReportFile().setOutputFile(os);
+				return getConfiguration().getOutputReportFile();
+
+			default:
+				byte[] pdfArray = exportPdf();
+				ByteArrayOutputStream osPdf = new ByteArrayOutputStream();
+				osPdf.write(pdfArray);
+				getConfiguration().getOutputReportFile().setOutputFile(osPdf);
+				return getConfiguration().getOutputReportFile();
+
+			}
+
 		} catch (Exception e) {
 			throw new ReportException("Error al contruir el reporte", e);
 
 		}
-		return this;
-	}
 
-	@Override
-	public byte[] exportBytes() {
-
-		return outputStream.toByteArray();
-	}
-
-	@Override
-	public OutputStream exportOS() {
-
-		return outputStream;
 	}
 
 	private void replaceFields() throws Exception {
 		MainDocumentPart documentPart = wordMLPackage.getMainDocumentPart();
 		VariablePrepare.prepare(wordMLPackage);
 
-		if (tablas != null && !tablas.isEmpty()) {
-			for (TableWord tabla : tablas) {
-				WMLPackageUtil.replaceTable(tabla.getColumnas(), tabla.getFilas(), wordMLPackage);
-			}
+		if (nonNull(tablesToReplace) && !tablesToReplace.isEmpty()) {
+			tablesToReplace
+					.forEach(table -> WMLPackageUtil.replaceTable(table.getColumns(), table.getRows(), wordMLPackage));
+
 		}
 
-		documentPart.variableReplace(this.parametros);
+		documentPart.variableReplace(new HashMap<>(getWordParametersMap()));
 	}
 
-	private void parsearParametros(Map<String, Object> parametros) {
-		this.parametros = new HashMap<>();
-		if (parametros == null) {
-			return;
-		}
-		for (Map.Entry<String, Object> item : parametros.entrySet()) {
-			if (item.getValue() instanceof String) {
-				this.parametros.put(item.getKey(), item.getValue().toString());
-			}
+	private Map<String, String> getWordParametersMap() {
 
+		if (isNull(getConfiguration().getInputReportFile().getParameterValues())) {
+			return new HashMap<>();
 		}
+
+		return getConfiguration().getInputReportFile().getParameterValues().entrySet().stream()
+				.collect(Collectors.toMap((Map.Entry<String, Object> i) -> i.getKey(),
+						(Map.Entry<String, Object> i) -> i.getValue().toString()));
+
 	}
 
-	@Override
 	public byte[] exportPdf() throws ReportException {
 		ByteArrayOutputStream pdfStream = new ByteArrayOutputStream();
-		ByteArrayInputStream is = new ByteArrayInputStream(exportBytes());
+		ByteArrayInputStream is = new ByteArrayInputStream(outputStream.toByteArray());
 		Options options = Options.getFrom(DocumentKind.DOCX).to(ConverterTypeTo.PDF);
 		IConverter conversor = ConverterRegistry.getRegistry().getConverter(options);
 		try {
@@ -150,11 +134,10 @@ public class WordReport extends Report {
 		return pdfStream.toByteArray();
 	}
 
-	@Override
 	public byte[] exportHtml() throws ReportException {
 
 		ByteArrayOutputStream htmlStream = new ByteArrayOutputStream();
-		ByteArrayInputStream is = new ByteArrayInputStream(exportBytes());
+		ByteArrayInputStream is = new ByteArrayInputStream(outputStream.toByteArray());
 		Options options = Options.getFrom(DocumentKind.DOCX).to(ConverterTypeTo.XHTML);
 		IConverter conversor = ConverterRegistry.getRegistry().getConverter(options);
 		try {
@@ -164,12 +147,6 @@ public class WordReport extends Report {
 		}
 
 		return htmlStream.toByteArray();
-	}
-
-	@Override
-	public String exportBase64() {
-		return org.apache.commons.codec.binary.Base64.encodeBase64String(exportBytes());
-
 	}
 
 }

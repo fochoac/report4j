@@ -3,12 +3,9 @@ package ec.eppec.comun.reporte.word;
 
 import static org.junit.Assert.assertNotNull;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,75 +17,95 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
+import ec.report4j.comun.report.InputReportFile;
+import ec.report4j.comun.report.OutputReportFile;
 import ec.report4j.comun.report.Report;
-import ec.report4j.comun.report.word.WordReport;
+import ec.report4j.comun.report.ReportConfiguration;
+import ec.report4j.comun.report.enumeration.OutputReportTypeEnum;
 import ec.report4j.comun.report.word.TableWord;
+import ec.report4j.comun.report.word.WordReport;
 
 public class WordReportTest {
 	private static final String TEMPLATE_NAME = "empleados.docx";
+	private static final Path TEMPORAL_FOLDER = Paths.get(System.getProperty("java.io.tmpdir"));
+	private InputReportFile inputReportFile;
 
 	@Before
 	public void setUp() throws Exception {
-	}
-
-	@Test
-	public final void testExportBytes() throws IOException, Throwable {
-		byte[] resultado = Report.getWordInstance()
-				.assignTemplate(getClass().getClassLoader().getResourceAsStream(TEMPLATE_NAME), getData())
-				.buildReport().exportBytes();
-		assertNotNull(resultado);
-	}
-
-	@Test
-	public final void testExportOS() throws IOException, Throwable {
-		ByteArrayOutputStream resultado = (ByteArrayOutputStream) Report.getWordInstance()
-				.assignTemplate(getClass().getClassLoader().getResourceAsStream(TEMPLATE_NAME), getData())
-				.buildReport().exportOS();
-		assertNotNull(resultado);
-	}
-
-	@Test
-	public final void testExportBase64() throws IOException, Throwable {
-		String cadena = Report.getWordInstance()
-				.assignTemplate(getClass().getClassLoader().getResourceAsStream(TEMPLATE_NAME), getData())
-				.buildReport().exportBase64();
-		assertNotNull(cadena);
+		inputReportFile = new InputReportFile(getClass().getClassLoader().getResourceAsStream(TEMPLATE_NAME),
+				getData());
 	}
 
 	@Test
 	public final void testExportPdf() throws IOException, Throwable {
-		byte[] pdf = Report.getWordInstance()
-				.assignTemplate(getClass().getClassLoader().getResourceAsStream(TEMPLATE_NAME), getData())
-				.buildReport().exportPdf();
-		File archivo = saveFile(pdf, "report-word-pdf", ".pdf");
-		assertNotNull(archivo);
+		OutputReportFile outputReportFile = new OutputReportFile(TEMPORAL_FOLDER, "testWord2Pdf",
+				OutputReportTypeEnum.PDF);
+		ReportConfiguration configuration = new ReportConfiguration(inputReportFile, outputReportFile);
+		Report report = new WordReport(configuration);
+		OutputReportFile outReportFile = report.buildReport();
+		outReportFile.saveFile();
+
+		assertNotNull(outReportFile.getFileBase64());
 	}
 
 	@Test
 	public final void testExportHtml() throws IOException, Throwable {
-		byte[] html = Report.getWordInstance()
-				.assignTemplate(getClass().getClassLoader().getResourceAsStream(TEMPLATE_NAME), getData())
-				.buildReport().exportHtml();
-		File archivo = saveFile(html, "report-word-html", ".html");
-		assertNotNull(archivo);
+		OutputReportFile outputReportFile = new OutputReportFile(TEMPORAL_FOLDER, "testWord2Html",
+				OutputReportTypeEnum.HTML);
+		ReportConfiguration configuration = new ReportConfiguration(inputReportFile, outputReportFile);
+		Report report = new WordReport(configuration);
+		OutputReportFile outReportFile = report.buildReport();
+		outReportFile.saveFile();
+
+		assertNotNull(outReportFile.getFileBase64());
 	}
 
 	@Test
-	public final void testExportPdfConTabla() throws IOException, Throwable {
-		WordReport reporte = (WordReport) Report.getWordInstance();
-		byte[] pdf = reporte.assignTemplate(getClass().getClassLoader().getResourceAsStream(TEMPLATE_NAME),
-				getData(), generateTable()).buildReport().exportPdf();
-		File archivo = saveFile(pdf, "report-word-pdf-tabla", ".pdf");
-		assertNotNull(archivo);
+	public final void testExportWord() throws IOException, Throwable {
+		OutputReportFile outputReportFile = new OutputReportFile(TEMPORAL_FOLDER, "testWord2Word",
+				OutputReportTypeEnum.DOC);
+		ReportConfiguration configuration = new ReportConfiguration(inputReportFile, outputReportFile);
+		Report report = new WordReport(configuration);
+		OutputReportFile outReportFile = report.buildReport();
+		outReportFile.saveFile();
+
+		assertNotNull(outReportFile.getFileBase64());
 	}
 
 	@Test
-	public final void testExportHtmlConTabla() throws IOException, Throwable {
-		WordReport reporte = (WordReport) Report.getWordInstance();
-		byte[] html = reporte.assignTemplate(getClass().getClassLoader().getResourceAsStream(TEMPLATE_NAME),
-				getData(), generateTable()).buildReport().exportHtml();
-		File archivo = saveFile(html, "report-word-html-tabla", ".html");
-		assertNotNull(archivo);
+	public final void testExportPdfWithTables() throws IOException, Throwable {
+		OutputReportFile outputReportFile = new OutputReportFile(TEMPORAL_FOLDER, "testWord2PdfWithTables",
+				OutputReportTypeEnum.PDF);
+		ReportConfiguration configuration = new ReportConfiguration(inputReportFile, outputReportFile);
+		Report report = new WordReport(configuration, generateTable());
+		OutputReportFile outReportFile = report.buildReport();
+		outReportFile.saveFile();
+
+		assertNotNull(outReportFile.getFileBase64());
+	}
+
+	@Test
+	public final void testExportHtmlWithTables() throws IOException, Throwable {
+		OutputReportFile outputReportFile = new OutputReportFile(TEMPORAL_FOLDER, "testWord2HtmlWithTables",
+				OutputReportTypeEnum.HTML);
+		ReportConfiguration configuration = new ReportConfiguration(inputReportFile, outputReportFile);
+		Report report = new WordReport(configuration, generateTable());
+		OutputReportFile outReportFile = report.buildReport();
+		outReportFile.saveFile();
+
+		assertNotNull(outReportFile.getFileBase64());
+	}
+
+	@Test
+	public final void testExportWordWithTables() throws IOException, Throwable {
+		OutputReportFile outputReportFile = new OutputReportFile(TEMPORAL_FOLDER, "testWord2WordWithTables",
+				OutputReportTypeEnum.DOC);
+		ReportConfiguration configuration = new ReportConfiguration(inputReportFile, outputReportFile);
+		Report report = new WordReport(configuration, generateTable());
+		OutputReportFile outReportFile = report.buildReport();
+		outReportFile.saveFile();
+
+		assertNotNull(outReportFile.getFileBase64());
 	}
 
 	private Map<String, Object> getData() {
@@ -111,15 +128,6 @@ public class WordReportTest {
 		fila.put("salary", "4");
 		textToAdd.add(fila);
 		return Arrays.asList(new TableWord(new String[] { "name", "email", "dateOfBirth", "salary" }, textToAdd));
-	}
-
-	private File saveFile(byte[] contenido, String nombre, String extension)
-			throws FileNotFoundException, IOException {
-		File archivo = Files.createTempFile(nombre, extension).toFile();
-		try (FileOutputStream out = new FileOutputStream(archivo)) {
-			out.write(contenido);
-		}
-		return archivo;
 	}
 
 }

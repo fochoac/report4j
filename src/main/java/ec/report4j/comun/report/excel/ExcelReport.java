@@ -1,12 +1,10 @@
 
 package ec.report4j.comun.report.excel;
 
+import static java.util.Objects.nonNull;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Map;
 
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.jxls.common.Context;
@@ -16,16 +14,19 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.tool.xml.XMLWorkerHelper;
 
+import ec.report4j.comun.report.OutputReportFile;
 import ec.report4j.comun.report.Report;
+import ec.report4j.comun.report.ReportConfiguration;
 import ec.report4j.comun.report.excepcion.ReportException;
-import ec.report4j.comun.report.util.Utilitary;
 
 /**
  * 
  * 
  * @author fochoa
- * @version 1.0 27/12/2018 Clase para generar un reporte de excel a partir de una plantilla. </br>
- *          <b>Nota:<b> No se puede superar el numero máximo de filas: {@link SpreadsheetVersion} de version excel 97.
+ * @version 1.0 27/12/2018 Clase para generar un reporte de excel a partir de
+ *          una plantilla. </br>
+ *          <b>Nota:<b> No se puede superar el numero máximo de filas:
+ *          {@link SpreadsheetVersion} de version excel 97.
  * 
  *          Excel97 format aka BIFF8
  *          <ul>
@@ -40,78 +41,76 @@ import ec.report4j.comun.report.util.Utilitary;
 public final class ExcelReport extends Report {
 
 	private Context context;
+	private ByteArrayOutputStream outputStream;
 
-	public ExcelReport assignTemplate(byte[] plantilla, Map<String, Object> parametros) {
-		this.inputStream = new ByteArrayInputStream(plantilla);
-		if (parametros == null) {
+	public ExcelReport(ReportConfiguration configuration) {
+		super(configuration);
+		if (nonNull(configuration.getInputReportFile().getParameterValues())
+				&& !configuration.getInputReportFile().getParameterValues().isEmpty()) {
+			context = new Context(configuration.getInputReportFile().getParameterValues());
+		} else {
 			context = new Context();
-			return this;
 		}
-		context = new Context(parametros);
-		return this;
 	}
 
-	public ExcelReport buildReport() throws ReportException {
+	public OutputReportFile buildReport() throws ReportException {
 		outputStream = new ByteArrayOutputStream();
-		this.outputStream = new ByteArrayOutputStream();
+
 		try {
-			JxlsHelper.getInstance().processTemplate(inputStream, outputStream, context);
+			JxlsHelper.getInstance().processTemplate(getConfiguration().getInputReportFile().getTemplate(),
+					outputStream, context);
+			switch (getConfiguration().getOutputReportFile().getOutputReportTypeEnum()) {
+			case DOC:
+				throw new ReportException("Convert Excel to Word doesn't support");
+
+			case XLS:
+				getConfiguration().getOutputReportFile().setOutputFile(outputStream);
+				return getConfiguration().getOutputReportFile();
+			case HTML:
+				byte[] htmlArray = exportHtml();
+				ByteArrayOutputStream os = new ByteArrayOutputStream();
+				os.write(htmlArray);
+				getConfiguration().getOutputReportFile().setOutputFile(os);
+				return getConfiguration().getOutputReportFile();
+
+			default:
+				byte[] pdfArray = exportPdf();
+				ByteArrayOutputStream osPdf = new ByteArrayOutputStream();
+				osPdf.write(pdfArray);
+				getConfiguration().getOutputReportFile().setOutputFile(osPdf);
+				return getConfiguration().getOutputReportFile();
+
+			}
+
 		} catch (Exception e) {
-			throw new ReportException("Error al contruir el reporte", e);
+			throw new ReportException("Error to build the report", e);
 		}
 
-		return this;
 	}
 
-	public byte[] exportBytes() {
-		return outputStream.toByteArray();
-	}
-
-	public OutputStream exportOS() {
-		return outputStream;
-	}
-
-	@Override
-	public byte[] exportPdf() throws ReportException {
+	private byte[] exportPdf() throws ReportException {
 		ByteArrayInputStream is = new ByteArrayInputStream(exportHtml());
 		ByteArrayOutputStream os = null;
 
 		try {
 			os = convertHtml2Pdf(is);
 		} catch (Exception e) {
-			throw new ReportException("Error al exportar el pdf", e);
+			throw new ReportException("Error to export XLS to PDF", e);
 		}
 		return os.toByteArray();
 	}
 
-	@Override
-	public byte[] exportHtml() throws ReportException {
+	private byte[] exportHtml() throws ReportException {
 		try {
-			byte[] array = exportBytes();
+			byte[] array = outputStream.toByteArray();
 			ByteArrayInputStream is = new ByteArrayInputStream(array);
 			return new ExcelToHtml(is).getHTML().getBytes();
+
 		} catch (Exception e) {
 
-			throw new ReportException("Error al exportar a html", e);
+			throw new ReportException("Error to export XLS to HTML", e);
 		}
 
-	}
-
-	@Override
-	public String exportBase64() {
-		return org.apache.commons.codec.binary.Base64.encodeBase64String(exportBytes());
-	}
-
-	@Override
-	public Report assignTemplate(InputStream plantilla, Map<String, Object> parametros) throws ReportException {
-		assignTemplate(Utilitary.convert(plantilla), parametros);
-		return this;
-	}
-
-	@Override
-	public Report assignTemplate(File plantilla, Map<String, Object> parametros) throws ReportException {
-		assignTemplate(Utilitary.convert(plantilla), parametros);
-		return this;
 	}
 
 	private ByteArrayOutputStream convertHtml2Pdf(ByteArrayInputStream inputStream) throws ReportException {
@@ -124,7 +123,7 @@ public final class ExcelReport extends Report {
 			document.close();
 			return arrayOutputStream;
 		} catch (Exception e) {
-			throw new ReportException("Error al convertir el html a pdf", e);
+			throw new ReportException("Error to export HTML to PDF", e);
 		}
 	}
 

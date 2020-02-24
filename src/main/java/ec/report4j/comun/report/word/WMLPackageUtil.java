@@ -27,7 +27,7 @@ import org.docx4j.wml.Tr;
  *
  *          16/04/2019
  *
- *          La clase {@link WMLPackageUtil} sirve para ayudar a navegar dentro del documento de word.
+ *          The {@link WMLPackageUtil} is used for replace variables with respective value.
  */
 class WMLPackageUtil {
 

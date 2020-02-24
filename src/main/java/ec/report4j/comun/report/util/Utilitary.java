@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
@@ -20,7 +19,7 @@ import ec.report4j.comun.report.excepcion.ReportException;
  *
  *          16/04/2019
  *
- *          La clase {@link Utilitary} sirve para gestionar converisiones.
+ *          The class {@link Utilitary} make usefull convertions..
  */
 public class Utilitary {
 	private static final Logger LOG = Logger.getLogger(Utilitary.class.getName());
