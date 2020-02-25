@@ -4,7 +4,7 @@ package ec.report4j.comun.report.word;
 import java.util.List;
 import java.util.Map;
 
-import lombok.Data;
+import lombok.Getter;
 
 /**
  *
@@ -16,15 +16,12 @@ import lombok.Data;
  *
  *          The {@link TableWord} class is used for generate word tables.
  */
-@Data
+
 public class TableWord {
-
+	@Getter
 	private String[] columns;
+	@Getter
 	private List<Map<String, String>> rows;
-
-	public TableWord() {
-		super();
-	}
 
 	public TableWord(String[] columns, List<Map<String, String>> rows) {
 
