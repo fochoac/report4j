@@ -50,4 +50,4 @@ Feel free to generate pull requests that help improve the functionality of the p
 
 # SONARQUBE
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=fochoac_report4j&metric=alert_status)](https://sonarcloud.io/dashboard?id=fochoac_report4j)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=org.report%3Areport4j&metric=alert_status)](https://sonarcloud.io/dashboard?id=org.report%3Areport4j)
