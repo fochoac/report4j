@@ -1,3 +1,5 @@
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=org.report%3Areport4j&metric=alert_status)](https://sonarcloud.io/dashboard?id=org.report%3Areport4j)
+
 # REPORT4J
 
 Utility component to generate excel, word and pdf documents.
@@ -48,6 +50,5 @@ InputReportFile inputReportFile = new InputReportFile(PATH_TEMPLATE,
 
 Feel free to generate pull requests that help improve the functionality of the project. Any post change is welcome.
 
-# SONARQUBE
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=org.report%3Areport4j&metric=alert_status)](https://sonarcloud.io/dashboard?id=org.report%3Areport4j)
+
