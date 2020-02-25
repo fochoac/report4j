@@ -1,11 +1,12 @@
 package ec.report4j.comun.report;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Objects;
 
 import ec.report4j.comun.report.enumeration.OutputReportTypeEnum;
 import ec.report4j.comun.report.excepcion.ReportException;
@@ -44,11 +45,15 @@ public class OutputReportFile {
 	}
 
 	private void validateInput(Path path, String filename, OutputReportTypeEnum outputType) throws ReportException {
-		Objects.requireNonNull(path, "Error, Path can't null");
-		Objects.requireNonNull(filename, "Error, filename can't null");
-		Objects.requireNonNull(outputType, "Error, outputType can't null");
-		if (!path.toFile().isDirectory()) {
-			throw new ReportException("The enter path doesn't exist");
+		try {
+			requireNonNull(path, "Error, Path can't null");
+			requireNonNull(filename, "Error, filename can't null");
+			requireNonNull(outputType, "Error, outputType can't null");
+			if (!path.toFile().isDirectory()) {
+				throw new ReportException("The enter path is not a directory");
+			}
+		} catch (Exception e) {
+			throw new ReportException(e);
 		}
 	}
 

@@ -19,20 +19,16 @@ public class InputReportFile {
 	@Setter
 	private Map<String, Object> parameterValues;
 
-	public InputReportFile() {
-		super();
-	}
-
-	public InputReportFile(ByteArrayInputStream template, Map<String, Object> parameterValues) {
-		requireNonNull(template, "Template can't be null");
+	public InputReportFile(ByteArrayInputStream template, Map<String, Object> parameterValues) throws ReportException {
+		validateInput(template);
 
 		this.template = template;
 		this.parameterValues = parameterValues;
 
 	}
 
-	public InputReportFile(byte[] template, Map<String, Object> parameterValues) {
-		this(new ByteArrayInputStream(template), parameterValues);
+	public InputReportFile(byte[] template, Map<String, Object> parameterValues) throws ReportException {
+		this(convert(template), parameterValues);
 	}
 
 	public InputReportFile(File template, Map<String, Object> parameterValues) throws ReportException {
@@ -41,6 +37,14 @@ public class InputReportFile {
 
 	public InputReportFile(InputStream template, Map<String, Object> parameterValues) throws ReportException {
 		this(convert(template), parameterValues);
+	}
+
+	private void validateInput(ByteArrayInputStream template) throws ReportException {
+		try {
+			requireNonNull(template, "Template can't be null");
+		} catch (Exception e) {
+			throw new ReportException(e);
+		}
 	}
 
 }

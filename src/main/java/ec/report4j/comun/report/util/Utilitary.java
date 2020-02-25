@@ -1,8 +1,8 @@
 
 package ec.report4j.comun.report.util;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.logging.Logger;
@@ -41,7 +41,17 @@ public class Utilitary {
 	public static final byte[] convert(File file) throws ReportException {
 		try {
 			return Files.readAllBytes(file.toPath());
-		} catch (IOException e) {
+		} catch (Exception e) {
+			LOG.severe("Error to parse File");
+			throw new ReportException(ERROR_PARSEO, e);
+		}
+
+	}
+
+	public static final ByteArrayInputStream convert(byte[] file) throws ReportException {
+		try {
+			return new ByteArrayInputStream(file);
+		} catch (Exception e) {
 			LOG.severe("Error to parse File");
 			throw new ReportException(ERROR_PARSEO, e);
 		}
